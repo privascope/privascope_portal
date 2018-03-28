@@ -1,0 +1,11 @@
+{% extends "jobs/base.html" %}
+{% load bootstrap_tags %}
+{% block title %}Submit New Job{% endblock %}
+{% block content %}
+<h1>Submit New</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|as_bootstrap }}
+    <input type="submit" value="Save" class="btn btn-primary" />
+</form>
+{% endblock %}

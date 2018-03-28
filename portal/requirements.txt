@@ -1,0 +1,8 @@
+django
+dj-database-url
+django-forms-bootstrap
+djangosaml2
+django-fsm
+django-fsm-admin
+django-fsm-log
+requests

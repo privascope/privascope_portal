@@ -1,0 +1,19 @@
+{% extends "jobs/base.html" %} 
+{% block title %}{% endblock %} 
+{% block content %} 
+{% if user.is_authenticated %}
+<div class="jumbotron clearfix">
+    <h1 class="display-3">New to PrivaScope?</h1>
+    <button class="btn btn-primary">Get Started</button>
+</div>
+{% else %}
+<div class="jumbotron clearfix">
+    <h1 class="display-3">Welcome to PrivaScope!</h1>
+    <button class="btn btn-info">Learn More</button>
+    <p>
+        <span>Already have access?</span>
+        <a href="{% url 'saml2_login' %}" class="btn btn-primary">Log In</a>
+    </p>
+</div>
+{% endif %}
+{% endblock %}

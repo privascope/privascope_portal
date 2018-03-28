@@ -1,0 +1,43 @@
+{% extends "jobs/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="job-list">
+    {% if not jobs %}
+    <div class="alert alert-info" role="alert">
+        No jobs found
+    </div>
+    {% else %}
+    <label for="filter">Show me...</label>
+    <select id="filter">
+        <option>All Active Jobs</option>
+    </select>
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Submitted</th>
+                <th>Owner</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{job.id}}</td>
+                <td>
+                    <a href="{% url 'jobs:detail' job.id %}">{{ job.name }}</a>
+                </td>
+                <td>{{ job.submitted_at|date:'DATETIME_FORMAT' }}</td>
+                <td>{{ job.owner }}</td>
+                <td>
+                    <span class="badge badge-pill badge-{{ job.status_badge }}">{{ job.status_enum.value.label }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

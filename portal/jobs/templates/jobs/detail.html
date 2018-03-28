@@ -1,0 +1,88 @@
+{% extends "jobs/base.html" %}
+{% block title %}Job Details: {{ job.name }}{% endblock %}
+{% block content %}
+<!-- <p>
+    <button class="btn btn-danger">Cancel Job</button>
+    <button class="btn btn-warning">Archive Job</button>
+    <button class="btn btn-info">Email All</button>
+</p> -->
+<div class="card">
+    <h5 class="card-header">
+        <span class="badge badge-secondary">ID: {{job.id}}</span>
+        <strong>{{job.name}}</strong>
+        <span class="float-right badge badge-info">Submitted: {{ job.submitted_at|date:'DATETIME_FORMAT' }}</span>
+    </h5>
+    <div class="card-body">
+        <div class="jumbotron status-node-widget">
+            <h3>{{status_nodes_widget.title}}</h3>
+            <ol class="status-node-list">
+                {% for s in status_nodes_widget.status_nodes %}
+                <li class="status-node {{ s.css_class }}">
+                    <span class="status-node-content"></span>
+                    <span class="status-node-label">{{ s.label }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+            {% if status_nodes_widget.action_required %}
+            <div>
+                <h4>Action Required:</h4>
+                <p>{{status_nodes_widget.action_required.text}}</p>
+            </div>
+            {% endif %}
+            <div class="row">
+                <div class="col-sm">
+                    <a href="{% url 'jobs:history' job.id %}">🕒 View History</a>
+                </div>
+                {% if user.is_staff %}
+                <div class="col-sm">
+                    <a href="{% url 'admin:jobs_job_change' job.id %}">✎ Update Status / Add Note</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm">
+                <h4>Owner</h4>
+                {{job.owner}}
+            </div>
+            <div class="col-sm">
+                <h4>Collaborators</h4>
+                <ul>
+                    {% for c in job.collaborators.all %}
+                    <li>{{c.username}}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm">
+                <h4>Description</h4>
+                <p class="card-text">{{ job.description }}</p>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm">
+                <h4>Submission File</h4>
+                <a href="{% url 'jobs:job_file' job.id %}">{{ job.filename }}</a>
+            </div>
+            
+            {% if request.user.is_staff or job.status_enum is Job.Status.RELEASED %}
+            {% if job.output.name %}
+            <div class="col-sm">
+                <h4>Output File</h4>
+                <a href="{% url 'jobs:job_output' job.id %}">{{ job.output.name }}</a>
+            </div>
+            {% endif %}
+            {% if job.errors.name %}
+            <div class="col-sm">
+                <h4>Error File</h4>
+                <a href="{% url 'jobs:job_errors' job.id %}">{{ job.errors.name }}</a>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

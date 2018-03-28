@@ -1,0 +1,24 @@
+{% extends "jobs/base.html" %}
+{% block title %}Job Details: {{ job.name }}{% endblock %}
+{% block content %}
+<table class="table">
+    <thead>
+        <th>Timestamp</th>
+        <th>Event</th>
+        <th>Message</th>
+        <th>User</th>
+    </thead>
+    <tbody>
+        {% for e in events %}
+        <tr>
+            <td>{{e.timestamp|date:'DATETIME_FORMAT'}}</td>
+            <td>{{e.type.value}}</td>
+            <td>{{e.message}}</td>
+            <td>{{e.user.username}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</ol>
+{% endblock %}
