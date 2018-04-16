@@ -98,19 +98,11 @@ class Job(models.Model):
         return status_type_badges[self.status_enum()]
 
     def _enqueue(self):
-        enqueue_url = settings.RUNNER_URL_BASE + settings.RUNNER_ENQUEUE
-        payload = {
-            'id': self.id,
-            'file': base64.b64encode(self.file.file.read()).decode('utf8'),
-            'owner': self.owner.username,
-            'key': settings.RUNNER_KEY,
-        }
-        resp = requests.post(enqueue_url, json=payload)
-        if resp.status_code != 200:
-            resp.raise_for_status()
+        from .celery import task_run_job
+        task_run_job.apply_async(countdown=10, args=[self.id])
 
     @fsm_log_by
-    @transition(field=status, source=Status.PENDING_CODE_REVIEW.name, target=Status.QUEUED.name) # Eventually add permission parameter
+    @transition(field=status, source=Status.PENDING_CODE_REVIEW.name, target=Status.QUEUED.name)
     def approve_code(self, by=None):
         self._enqueue()
 
@@ -140,18 +132,18 @@ class Job(models.Model):
             self.errors.save(f'{self.id}-{int(time.time())}.err', ContentFile(errors))
 
     @fsm_log_by
-    @transition(field=status, source=Status.PENDING_OUTPUT_REVIEW.name, target=Status.RELEASED.name) # Eventually add permission parameter
+    @transition(field=status, source=Status.PENDING_OUTPUT_REVIEW.name, target=Status.RELEASED.name)
     def approve_output(self, by=None):
         pass
 
     @fsm_log_by
-    @transition(field=status, source=Status.PENDING_OUTPUT_REVIEW.name, target=Status.OUTPUT_REJECTED.name) # Eventually add permission parameter
+    @transition(field=status, source=Status.PENDING_OUTPUT_REVIEW.name, target=Status.OUTPUT_REJECTED.name)
     def reject_output(self, by=None):
         pass
 
     @fsm_log_by
     @transition(field=status, source=Status.PENDING_CODE_REVIEW.name, target=Status.DELETED.name)
-    def delete(self, by=None):
+    def delete_job(self, by=None):
         pass
 
     def __str__(self):

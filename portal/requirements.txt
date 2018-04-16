@@ -6,3 +6,5 @@ django-fsm
 django-fsm-admin
 django-fsm-log
 requests
+celery
+docker==3.1.4

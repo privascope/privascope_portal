@@ -15,7 +15,4 @@ urlpatterns = [
     path('output/<int:job_id>', views.job_output, name='job_output'),
     path('errors/<int:job_id>', views.job_errors, name='job_errors'),
     path('create', views.CreateView.as_view(), name='create'),
-    path('start', views.start_job, name='start'),
-    path('complete', views.complete_job, name='complete'),
-    path('fail', views.fail_job, name='fail'),
 ]

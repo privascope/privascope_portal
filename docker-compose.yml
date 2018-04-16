@@ -6,9 +6,9 @@ services:
   portal:
     build: ./portal
     environment:
+      - 'ALLOWED_HOSTS=*'
       - 'DATABASE_URL=postgresql://postgres@db/postgres'
       - 'DEBUG=${DEBUG}'
-      - 'ALLOWED_HOSTS=*'
       - 'SAML2_SP_CERT=${SAML2_SP_CERT}'
       - 'SAML2_SP_KEY=${SAML2_SP_KEY}'
       - 'SAML2_IDP_METADATA=${SAML2_IDP_METADATA}'
@@ -18,7 +18,6 @@ services:
       - 'SAML2_ACS_POST=${SAML2_ACS_POST}'
       - 'SAML2_REQUIRED_ATTRIBUTES=${SAML2_REQUIRED_ATTRIBUTES}'
       - 'SAML2_OPTIONAL_ATTRIBUTES=${SAML2_OPTIONAL_ATTRIBUTES}'
-      - 'RUNNER_KEY=${RUNNER_KEY}'
       - 'SECRET_KEY_PORTAL=${SECRET_KEY_PORTAL}'
       - 'EMAIL_HOST=${EMAIL_HOST}'
       - 'EMAIL_HOST_USER=${EMAIL_HOST_USER}'
@@ -26,15 +25,18 @@ services:
       - 'EMAIL_PORT=${EMAIL_PORT}'
       - 'EMAIL_USE_TLS=${EMAIL_USE_TLS}'
       - 'ABSOLUTE_URL_BASE=${ABSOLUTE_URL_BASE}'
-    command: python manage.py runserver 0.0.0.0:8000
+      - 'RUNNER_QUEUE_USER=${RUNNER_QUEUE_USER}'
+      - 'RUNNER_QUEUE_PASS=${RUNNER_QUEUE_PASS}'
+      - 'DOCKER_HOST=tcp://runner-docker-daemon:2375'
+    command: python3.6 manage.py runserver 0.0.0.0:8000
     volumes:
       - ./portal:/usr/src/app
     ports:
       - "8023:8000"
     depends_on:
       - db
+      - runner-worker
   rabbit:
-    hostname: rabbit
     image: rabbitmq:latest
     environment:
         - RABBITMQ_DEFAULT_USER=${RUNNER_QUEUE_USER}
@@ -42,33 +44,39 @@ services:
     ports:
         - "5673:5672"
   runner-docker-daemon:
-    image: docker:dind
+    build: ./runner-docker-daemon
     privileged: true
-  runner-worker:
-    build: ./runner
     environment:
-      - 'RUNNER_KEY=${RUNNER_KEY}'
-      - 'SECRET_KEY_RUNNER=${SECRET_KEY_RUNNER}'
-      - 'DOCKER_HOST=tcp://runner-docker-daemon:2375'
+      - 'JOB_RESOURCES=${JOB_RESOURCES}'
+    volumes:
+      - ./runner-docker-daemon:/usr/src/app
+  runner-worker:
+    build: ./portal
+    environment:
+      - 'DATABASE_URL=postgresql://postgres@db/postgres'
+      - 'DEBUG=${DEBUG}'
+      - 'SAML2_SP_CERT=${SAML2_SP_CERT}'
+      - 'SAML2_SP_KEY=${SAML2_SP_KEY}'
+      - 'SAML2_IDP_METADATA=${SAML2_IDP_METADATA}'
+      - 'SAML2_SP_NAME=${SAML2_SP_NAME}'
+      - 'SAML2_LS_REDIRECT=${SAML2_LS_REDIRECT}'
+      - 'SAML2_LS_POST=${SAML2_LS_POST}'
+      - 'SAML2_ACS_POST=${SAML2_ACS_POST}'
+      - 'SAML2_REQUIRED_ATTRIBUTES=${SAML2_REQUIRED_ATTRIBUTES}'
+      - 'SAML2_OPTIONAL_ATTRIBUTES=${SAML2_OPTIONAL_ATTRIBUTES}'
+      - 'SECRET_KEY_PORTAL=${SECRET_KEY_PORTAL}'
+      - 'EMAIL_HOST=${EMAIL_HOST}'
+      - 'EMAIL_HOST_USER=${EMAIL_HOST_USER}'
+      - 'EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}'
+      - 'EMAIL_PORT=${EMAIL_PORT}'
+      - 'EMAIL_USE_TLS=${EMAIL_USE_TLS}'
+      - 'ABSOLUTE_URL_BASE=${ABSOLUTE_URL_BASE}'
       - 'RUNNER_QUEUE_USER=${RUNNER_QUEUE_USER}'
       - 'RUNNER_QUEUE_PASS=${RUNNER_QUEUE_PASS}'
-    command: celery -A privascope_runner worker --loglevel=${RUNNER_WORKER_LOGLEVEL}
+      - 'DOCKER_HOST=tcp://runner-docker-daemon:2375'
+    command: celery -A jobs worker --loglevel=${RUNNER_WORKER_LOGLEVEL}
     volumes:
-      - ./runner:/usr/src/app
+      - ./portal:/usr/src/app
     depends_on:
       - runner-docker-daemon
       - rabbit
-  runner:
-    build: ./runner
-    environment:
-      - 'DEBUG=${DEBUG}'
-      - 'ALLOWED_HOSTS=runner'
-      - 'RUNNER_KEY=${RUNNER_KEY}'
-      - 'SECRET_KEY_RUNNER=${SECRET_KEY_RUNNER}'
-      - 'RUNNER_QUEUE_USER=${RUNNER_QUEUE_USER}'
-      - 'RUNNER_QUEUE_PASS=${RUNNER_QUEUE_PASS}'
-    command: python manage.py runserver 0.0.0.0:8005
-    volumes:
-      - ./runner:/usr/src/app
-    depends_on:
-      - runner-worker

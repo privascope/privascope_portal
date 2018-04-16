@@ -1,218 +1,158 @@
-import json
-import base64
-
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files import File
 
-from .views import complete_job, fail_job
 from .models import Job
+from .celery import run_job_docker
 
-@override_settings(RUNNER_KEY='TEST')
-class CompleteViewTests(TestCase):
+import time
 
+
+class JobHelloWorldIntegrationTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.creator = User.objects.create_user('toejam', 'toejam@funkotron.net', 'toejam')
+        file = File(open('tests/hello.tar.gz', 'rb'))
         self.job = Job.objects.create(
-                name='A Test Job',
-                description='Do many testful things and return output.',
-                status=Job.Status.RUNNING.name,
-                owner=self.creator,
-                filename='test.txt',
-                file=ContentFile('test input'),
-                submitted_at=timezone.now(),
-            )
+            name='Hello Job',
+            description='Return output with Hello World text',
+            status=Job.Status.QUEUED.name,
+            owner=self.creator,
+            filename=file.name,
+            file=file,
+            submitted_at=timezone.now(),
+        )
 
-    def test_responds_401_if_key_empty(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-            'key': '',
-        }
-        resp = self.client.post(reverse('jobs:complete'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_401_if_key_missing(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-        }
-        resp = self.client.post(reverse('jobs:complete'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_401_if_key_not_matching(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-            'key': 'test', # Should be upper case
-        }
-        resp = self.client.post(reverse('jobs:complete'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_400_if_json_malformed(self):
-        data = f"{{'id' 0,'output': 'test output','key': 'test'}}" # Missing colon after 'id'
-        resp = self.client.post(reverse('jobs:complete'), data=data, content_type='application/json')
-        self.assertEqual(resp.status_code, 400)
-
-    def test_completes_job(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-            'key': 'TEST',
-        }
-        resp = self.client.post(reverse('jobs:complete'), data=json.dumps(data), content_type='application/json')
+    def test_hello_completes(self):
+        run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(resp.status_code, 200)
-        self.assertTrue(hasattr(self.job, 'output'))
         self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
 
+    def test_hello_has_output(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertTrue('Hello from Docker!' in self.job.output.read().decode('utf-8'))
 
-@override_settings(RUNNER_KEY='TEST')
-class FailViewTests(TestCase):
+    def test_hello_has_no_error(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertFalse(getattr(self.job, 'errors', None))
 
+    def test_hello_not_failed(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertFalse(self.job.failed)
+
+class JobGoodbyeWorldIntegrationTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.creator = User.objects.create_user('toejam', 'toejam@funkotron.net', 'toejam')
+        file = File(open('tests/goodbye.tar.gz', 'rb'))
         self.job = Job.objects.create(
-                name='A Test Job',
-                description='Do many testful things and return output.',
-                status=Job.Status.RUNNING.name,
-                owner=self.creator,
-                filename='test.txt',
-                file=ContentFile('test input'),
-                submitted_at=timezone.now(),
-            )
+            name='Goodbye Job',
+            description='Return error with Goodbye World text',
+            status=Job.Status.QUEUED.name,
+            owner=self.creator,
+            filename=file.name,
+            file=file,
+            submitted_at=timezone.now(),
+        )
 
-    def test_responds_401_if_key_empty(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-            'key': '',
-        }
-        resp = self.client.post(reverse('jobs:fail'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_401_if_key_missing(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-        }
-        resp = self.client.post(reverse('jobs:fail'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_401_if_key_not_matching(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-            'key': 'test', # Should be upper case
-        }
-        resp = self.client.post(reverse('jobs:fail'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_400_if_json_malformed(self):
-        data = f"{{'id' 0,'output': 'test output','key': 'test'}}" # Missing colon after 'id'
-        resp = self.client.post(reverse('jobs:fail'), data=data, content_type='application/json')
-        self.assertEqual(resp.status_code, 400)
-
-    def test_fails_job(self):
-        data = {
-            'id': self.job.id,
-            'output': str(base64.b64encode(b'test test test')),
-            'key': 'TEST',
-        }
-        resp = self.client.post(reverse('jobs:fail'), data=json.dumps(data), content_type='application/json')
+    def test_goodbye_completes(self):
+        run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(resp.status_code, 200)
         self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
-        self.assertEqual(self.job.failed, True)
 
+    def test_goodbye_has_error(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertTrue('Goodbye' in self.job.errors.read().decode('utf-8'))
 
-@override_settings(RUNNER_KEY='TEST')
-class StartViewTests(TestCase):
+    def test_goodbye_has_no_output(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertFalse(getattr(self.job, 'output', None))
 
+    def test_goodbye_failed(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertTrue(self.job.failed)
+
+class JobAccessInternetIntegrationTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.creator = User.objects.create_user('toejam', 'toejam@funkotron.net', 'toejam')
+        file = File(open('tests/access-internet.tar.gz', 'rb'))
         self.job = Job.objects.create(
-                name='A Test Job',
-                description='Do many testful things and return output.',
-                status=Job.Status.QUEUED.name,
-                owner=self.creator,
-                filename='test.txt',
-                file=ContentFile('test input'),
-                submitted_at=timezone.now(),
-            )
+            name='Access Internet Job',
+            description='Return error with failure of access-internet to connect',
+            status=Job.Status.QUEUED.name,
+            owner=self.creator,
+            filename=file.name,
+            file=file,
+            submitted_at=timezone.now(),
+        )
 
-    def test_responds_401_if_key_empty(self):
-        data = {
-            'id': self.job.id,
-            'key': '',
-        }
-        resp = self.client.post(reverse('jobs:start'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_401_if_key_missing(self):
-        data = {
-            'id': self.job.id,
-        }
-        resp = self.client.post(reverse('jobs:start'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_401_if_key_not_matching(self):
-        data = {
-            'id': self.job.id,
-            'key': 'test', # Should be upper case
-        }
-        resp = self.client.post(reverse('jobs:start'), data=json.dumps(data), content_type='application/json')
-        self.assertEqual(resp.status_code, 401)
-
-    def test_responds_400_if_json_malformed(self):
-        data = f"{{'id' 0,'key': 'test'}}" # Missing colon after 'id'
-        resp = self.client.post(reverse('jobs:start'), data=data, content_type='application/json')
-        self.assertEqual(resp.status_code, 400)
-
-    def test_job_running(self):
-        data = {
-            'id': self.job.id,
-            'key': 'TEST',
-        }
-        resp = self.client.post(reverse('jobs:start'), data=json.dumps(data), content_type='application/json')
+    def test_access_internet_completes(self):
+        run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(self.job.status_enum(), Job.Status.RUNNING)
+        self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
 
+    def test_access_internet_has_error(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        message = self.job.errors.read().decode('utf-8')
+        self.assertTrue('Could not resolve' in message or 'timed out' in message)
 
-class RunnerIntegrationTests(TestCase):
+    def test_access_internet_has_no_output(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertFalse(getattr(self.job, 'output', None))
 
+    def test_access_internet_failed(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertTrue(self.job.failed)
+
+# export JOB_RESOURCES=104.40.211.35,98.137.246.8  before starting docker-compose
+class JobAccessResourceIntegrationTestCase(TestCase):
     def setUp(self):
-        key = getattr(settings, 'RUNNER_KEY', '')
-        if not key.strip():
-            raise Exception('Set RUNNER_KEY in environment and run this test with docker-compose.')
         self.client = Client()
         self.creator = User.objects.create_user('toejam', 'toejam@funkotron.net', 'toejam')
+        file = File(open('tests/access-resource.tar.gz', 'rb'))
         self.job = Job.objects.create(
-                name='A Test Job',
-                description='Do many testful things and return output.',
-                status=Job.Status.PENDING_CODE_REVIEW.name,
-                owner=self.creator,
-                filename='test.txt',
-                file=SimpleUploadedFile('test.txt', b'test test test'),
-                submitted_at=timezone.now(),
-            )
-        self.job.save()
+            name='Access Resource Job',
+            description='Return success of access-resource connection',
+            status=Job.Status.QUEUED.name,
+            owner=self.creator,
+            filename=file.name,
+            file=file,
+            submitted_at=timezone.now(),
+        )
 
-    def test_enqueue_integrates(self):
-        self.job.approve_code()
-        self.job.save()
+    def test_access_resource_completes(self):
+        run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(self.job.status_enum(), Job.Status.QUEUED)
+        self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
 
-    @override_settings(RUNNER_KEY='mismatch')
-    def test_enqueue_fails_if_key_mismatch(self):
-        with self.assertRaises(Exception):
-            self.job.approve_code()
+    def test_access_resource_has_output(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        message = self.job.output.read().decode('utf-8')
+        # print(message)
+        self.assertTrue('html' in message)
+
+    def test_access_resource_has_no_error(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        error = getattr(self.job, 'error', None)
+        print(error)
+        self.assertFalse(error)
+
+    def test_access_resource_not_failed(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertFalse(self.job.failed)

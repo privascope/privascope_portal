@@ -1,6 +1,0 @@
-django
-djangorestframework
-requests
-celery
-docker
-tenacity

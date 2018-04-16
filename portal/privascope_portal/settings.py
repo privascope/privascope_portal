@@ -130,9 +130,9 @@ STATIC_URL = '/static/'
 
 # Runner
 
-RUNNER_URL_BASE = 'http://runner:8005'
-RUNNER_ENQUEUE = '/enqueue'
-RUNNER_KEY = os.getenv('RUNNER_KEY')
+RUNNER_QUEUE_USER = os.getenv('RUNNER_QUEUE_USER')
+RUNNER_QUEUE_PASS = os.getenv('RUNNER_QUEUE_PASS')
+CELERY_BROKER_URL = f'amqp://{RUNNER_QUEUE_USER}:{RUNNER_QUEUE_PASS}@rabbit:5672'
 
 
 # Email
