@@ -8,8 +8,9 @@ The web interface is a Django app employing django_fsm for workflow actions. Cel
 
 ### Setup for docker-compose
 
-Customize the following for required environment variables:
+Customize and run the following for required environment variables. In Windows, you may need to use [Powershell](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_environment_variables?view=powershell-6):
 
+    export PRIVATE_STORAGE_ROOT="files/"
     export SAML2_SP_CERT=(SAML2 SP certificate)
     export SAML2_SP_KEY=(SAML2 SP key)
     export SAML2_IDP_METADATA=(SAML2 IDP metadata)
@@ -33,7 +34,8 @@ Customize the following for required environment variables:
     export DEBUG=yes
     export ABSOLUTE_URL_BASE=http://localhost:8023
     # Microsoft.com & Yahoo.com, respectively - include these as-is for integration tests
-    export export JOB_RESOURCES=104.40.211.35,98.137.246.8,microsoft.com,yahoo.com
+    export JOB_RESOURCES=104.40.211.35,98.137.246.8,microsoft.com,yahoo.com
+    export JOB_ENV_VARS="EXAMPLE_VAR=abcd1234"
 
 Do initial setup:
 
@@ -48,6 +50,15 @@ Start the development environment:
     docker-compose up
 
 You can now test the app at localhost:8023.
+
+#### Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+
+If you encounter this error on startup:
+
+    docker-compose rm
+    docker-compose up
+
+This should get the daemon running again.
 
 ### Integration tests
 

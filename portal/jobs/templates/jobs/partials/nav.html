@@ -13,12 +13,6 @@
                 <li class="nav-item {% active_url 'jobs:index' %}">
                     <a class="nav-link" href="{% url 'jobs:index' %}">Dashboard</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="">Documentation</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="">Sandbox</a>
-                </li>
                 <li class="nav-item {% active_url 'jobs:create' %}">
                     <a class="nav-link" href="{% url 'jobs:create' %}">Submit New</a>
                 </li>
@@ -26,10 +20,13 @@
             {% endif %}
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="">About</a>
+                    <a class="nav-link" href="/about">About</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="">Help</a>
+                    <a class="nav-link" href="/getting-started">Getting Started</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/help">Help</a>
                 </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item">

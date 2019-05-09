@@ -45,26 +45,12 @@ def email_reject_code(job):
     email.send()
 
 def email_complete_job_run(job):
-    to = [job.owner.email]
-    cc = (c.email for c in job.collaborators.all())
-    subject = f'Job Run Completed: {job.name}'
-    url = settings.ABSOLUTE_URL_BASE + reverse('jobs:detail', args=(job.id,))
-    link = f'<a href="{url}">{job.id} ({job.name})</a>'
-    body = f'Your job {link} was completed. Its output is now pending review.'
-    email = EmailMessage(subject, body, to=to, cc=cc)
-    email.content_subtype = "html"
-    email.send()
+    _notify_job_owner(job, False)
+    _notify_job_approvers(job)
 
 def email_fail_job_run(job):
-    to = [job.owner.email]
-    cc = (c.email for c in job.collaborators.all())
-    subject = f'Job Run Failed: {job.name}'
-    url = settings.ABSOLUTE_URL_BASE + reverse('jobs:detail', args=(job.id,))
-    link = f'<a href="{url}">{job.id} ({job.name})</a>'
-    body = f'Your job {link} failed. Please visit the link to review failure details and rerun.'
-    email = EmailMessage(subject, body, to=to, cc=cc)
-    email.content_subtype = "html"
-    email.send()
+    _notify_job_owner(job, True)
+    _notify_job_approvers(job)
 
 def email_approve_output(job):
     to = [job.owner.email]
@@ -85,6 +71,27 @@ def email_reject_output(job):
     link = f'<a href="{url}">{job.id} ({job.name})</a>'
     body = f'The output of job {link} was rejected. Please visit the link to see the next steps and resubmit your job.'
     email = EmailMessage(subject, body, to=to, cc=cc)
+    email.content_subtype = "html"
+    email.send()
+
+def _notify_job_owner(job, is_failure):
+    to = [job.owner.email]
+    cc = (c.email for c in job.collaborators.all())
+    subject = f'Job Run {"Failed" if is_failure else "Completed"}: {job.name}'
+    url = settings.ABSOLUTE_URL_BASE + reverse('jobs:detail', args=(job.id,))
+    link = f'<a href="{url}">{job.id} ({job.name})</a>'
+    body = f'Your job {link} {"failed" if is_failure else "was completed"}. Its output is now pending review.'
+    email = EmailMessage(subject, body, to=to, cc=cc)
+    email.content_subtype = "html"
+    email.send()
+
+def _notify_job_approvers(job):
+    to = [admin[1] for admin in settings.ADMINS]
+    subject = f'Output Approval Needed: {job.name}'
+    url = settings.ABSOLUTE_URL_BASE + reverse('jobs:detail', args=(job.id,))
+    link = f'<a href="{url}">{job.id} ({job.name})</a>'
+    body = f'The job {link} was completed and requires approval. Please visit the link to review the output.'
+    email = EmailMessage(subject, body, to=to)
     email.content_subtype = "html"
     email.send()
 
