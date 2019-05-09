@@ -1,19 +1,38 @@
-{% extends "jobs/base.html" %} 
-{% block title %}{% endblock %} 
-{% block content %} 
+{% extends "jobs/base.html" %}
+{% block title %}{% endblock %}
+{% block content %}
 {% if user.is_authenticated %}
 <div class="jumbotron clearfix">
-    <h1 class="display-3">New to PrivaScope?</h1>
-    <button class="btn btn-primary">Get Started</button>
+    <h1 class="display-4">
+        Introducing
+        <span class="font-weight-bold">PrivaScope</span>
+    </h1>
+    <p class="lead">
+        PrivaScope allows researchers to ask aggregate questions across multiple university data sets in an ethical, privacy-preserving manner.
+    </p>
+    <a class="btn btn-primary" href="/getting-started" role="button">Get Started</a>
 </div>
 {% else %}
 <div class="jumbotron clearfix">
-    <h1 class="display-3">Welcome to PrivaScope!</h1>
-    <button class="btn btn-info">Learn More</button>
+    <h1 class="display-4">
+        Introducing
+        <span class="font-weight-bold">PrivaScope</span>
+    </h1>
+    <p class="lead">
+        PrivaScope allows researchers to ask aggregate questions across multiple university data sets in a ethical,
+        privacy-preserving manner.
+    </p>
     <p>
         <span>Already have access?</span>
         <a href="{% url 'saml2_login' %}" class="btn btn-primary">Log In</a>
     </p>
 </div>
 {% endif %}
+{% load flatpages %}
+{% get_flatpages "/home/" as home_pages %}
+{% for flatpage in home_pages %}
+<div class="row">
+    <div class="col mb-3">{% include "flatpages/_card.html" %}</div>
+</div>
+{% endfor %}
 {% endblock %}

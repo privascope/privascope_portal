@@ -1,0 +1,19 @@
+{% extends "jobs/base.html" %}
+{% block title %}Permission Denied{% endblock %}
+{% block content %}
+<div class="jumbotron clearfix bg-transparent">
+  <h1 class="display-4 text-primary">Access Denied</h1>
+  <hr class="my-4">
+
+  {% load flatpages %}
+  {% load markdown %}
+  {% get_flatpages '/permission-denied/' as permission_denied_pages %}
+  {% for flatpage in permission_denied_pages %}
+  {{ flatpage.content|markdown|safe }}
+  {% endfor %}
+
+  {% if not permission_denied_pages %}
+    Please contact your site administrator for additional details.
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -v convert
+    kompose.version: 1.11.0 (39ad614)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: portal
+  name: portal
+spec:
+  replicas: $PORTAL_DEPLOYMENT_REPLICAS
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: portal
+    spec:
+      containers:
+      - command: ["./server.sh"]
+        env:
+        - name: ABSOLUTE_URL_BASE
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: ABSOLUTE_URL_BASE
+        - name: ADDITIONAL_INSTALLED_APPS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: ADDITIONAL_INSTALLED_APPS
+        - name: ADMINS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: ADMINS
+        - name: ALLOWED_HOSTS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: ALLOWED_HOSTS
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DATABASE_URL
+        - name: DEBUG
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DEBUG
+        - name: DEFAULT_FROM_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DEFAULT_FROM_EMAIL
+        - name: DOCKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DOCKER_HOST
+        - name: DOCKER_TLS_VERIFY
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DOCKER_TLS_VERIFY
+        - name: PRIVATE_JOB_OUTPUT_ROOT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: PRIVATE_JOB_OUTPUT_ROOT
+        - name: PRIVATE_STORAGE_ROOT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: PRIVATE_STORAGE_ROOT
+        - name: INSTALLED_APPS_ENV_VARS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: INSTALLED_APPS_ENV_VARS
+        - name: JOB_CONTAINER_MEM_LIMIT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: JOB_CONTAINER_MEM_LIMIT
+        - name: JOB_CONTAINER_MEMSWAP_LIMIT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: JOB_CONTAINER_MEMSWAP_LIMIT
+        - name: JOB_ENV_FILE
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: JOB_ENV_FILE
+        - name: JOB_ENV_VARS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: JOB_ENV_VARS
+        - name: EMAIL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: EMAIL_HOST
+        - name: EMAIL_HOST_USER
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: EMAIL_HOST_USER
+        - name: EMAIL_PORT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: EMAIL_PORT
+        - name: EMAIL_USE_TLS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: EMAIL_USE_TLS
+        - name: EMAIL_HOST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: EMAIL_HOST_PASSWORD
+        - name: RESTRICTED_ACCESS_GROUPS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: RESTRICTED_ACCESS_GROUPS
+        - name: RUNNER_QUEUE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: RUNNER_QUEUE_PASS
+        - name: RUNNER_QUEUE_USER
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: RUNNER_QUEUE_USER
+        - name: SAML2_ACS_POST
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_ACS_POST
+        - name: SAML2_IDP_METADATA
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_IDP_METADATA
+        - name: SAML2_LS_POST
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_LS_POST
+        - name: SAML2_LS_REDIRECT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_LS_REDIRECT
+        - name: SAML2_OPTIONAL_ATTRIBUTES
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_OPTIONAL_ATTRIBUTES
+        - name: SAML2_REQUIRED_ATTRIBUTES
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_REQUIRED_ATTRIBUTES
+        - name: SAML2_SP_CERT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_SP_CERT
+        - name: SAML2_SP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_SP_KEY
+        - name: SAML2_SP_NAME
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_SP_NAME
+        - name: SAML2_ENTITY_ID
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SAML2_ENTITY_ID
+        - name: SECRET_KEY_PORTAL
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: SECRET_KEY_PORTAL
+        - name: DOCKER_TLSCACERT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DOCKER_TLSCACERT
+        - name: DOCKER_CLIENT_TLSCERT
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DOCKER_CLIENT_TLSCERT
+        - name: DOCKER_CLIENT_TLSKEY
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: DOCKER_CLIENT_TLSKEY
+        image: $PORTAL_DEPLOYMENT_IMAGE
+        name: portal
+        ports:
+        - containerPort: 8000
+        resources: {}
+        volumeMounts:
+        - mountPath: $PORTAL_DEPLOYMENT_MOUNT_PATH
+          name: job-files
+      restartPolicy: Always
+      volumes:
+      - name: job-files
+        persistentVolumeClaim:
+          claimName: job-files
+status: {}

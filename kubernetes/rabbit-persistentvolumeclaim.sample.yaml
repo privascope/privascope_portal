@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: rabbit
+  name: rabbit
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: $RABBIT_PVC_STORAGE
+status: {}

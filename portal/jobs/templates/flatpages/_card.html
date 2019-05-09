@@ -1,0 +1,7 @@
+{% load markdown %}
+<div class="card">
+	<div class="card-header">{{ flatpage.title }}</div>
+	<div class="card-body">
+		{{ flatpage.content|markdown|safe }}
+	</div>
+</div>

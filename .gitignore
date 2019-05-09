@@ -90,4 +90,9 @@ db.sqlite3
 
 *.out
 .vscode
-saml_vars.sh
+secrets/
+files/
+job-output/
+static/
+scripts/
+kubernetes/output

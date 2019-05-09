@@ -39,7 +39,13 @@ def task_run_job(self, job_id):
 
 def run_job_docker(job):
     _run_started(job)
-    exit_code, encoded_output, encoded_errors = _build_run_job(base64.b64encode(job.file.file.read()).decode('utf8'))
+    try:
+        volume_host_path = os.path.join(settings.PRIVATE_JOB_OUTPUT_ROOT, job.owner.username)
+        exit_code, encoded_output, encoded_errors = _build_run_job(
+            base64.b64encode(job.file.file.read()).decode('utf8'), volume_host_path)
+    except Exception:
+        _run_error(job)
+        raise
     if exit_code != 0:
         _run_failed(job, encoded_output, encoded_errors)
     else:
@@ -47,6 +53,10 @@ def run_job_docker(job):
 
 def _run_started(job):
     job.run_job()
+    job.save()
+
+def _run_error(job):
+    job.error_job_run()
     job.save()
 
 def _run_completed(job, job_stdout, job_stderr):
@@ -75,11 +85,21 @@ def _build_image(job_file_bytes, docker_client):
                 print(ex)
                 raise ex
 
-def _build_run_job(job_file_b64):
+def _build_run_job(job_file_b64, volume_host_path):
     docker_client = docker.from_env()
     job_file_bytes = base64.b64decode(job_file_b64)
     image = _build_image(job_file_bytes, docker_client)
-    container = docker_client.containers.run(image.id, detach=True, network='job-network')
+    container = docker_client.containers.run(
+        image.id,
+        detach=True,
+        network='job-network',
+        volumes={volume_host_path: {'bind': settings.JOB_CONTAINER_VOLUME_MOUNT, 'mode': 'rw'}},
+        environment=settings.JOB_ENV_DICT,
+        cpu_period=settings.JOB_CONTAINER_CPU_PERIOD,
+        cpu_quota=settings.JOB_CONTAINER_CPU_QUOTA,
+        mem_limit=settings.JOB_CONTAINER_MEM_LIMIT,
+        memswap_limit=settings.JOB_CONTAINER_MEMSWAP_LIMIT,
+    )
     container_result = container.wait()
     container_output = container.logs(stdout=True, stderr=False)
     container_errors = container.logs(stderr=True, stdout=False)

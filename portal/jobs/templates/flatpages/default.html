@@ -1,0 +1,40 @@
+{% extends "jobs/base.html" %}
+{% load bootstrap_tags %}
+{% load markdown %}
+{% load flatpages %}
+{% block title %}{{ flatpage.title }}{% endblock %}
+{% block content %}
+<!-- Render a navbar if more than one page exists for the url group -->
+<div class="row">
+	{% get_flatpages request.path as flat_pages %}
+	{% if flat_pages|length > 1 %}
+	<div class="col-md-3 d-none d-md-block">
+		<nav id="flatpages-nav" class="list-group sticky-top">
+			{% for flatpage in flat_pages %}
+			<a class="list-group-item list-group-item-action" href="#page-{{ forloop.counter }}">{{ flatpage.title }}</a>
+			{% endfor %}
+		</nav>
+	</div>
+
+	<div class="col-md-9">
+		<div data-spy="scroll" data-target="#flatpages-nav" data-offset="0">
+			{% for flatpage in flat_pages %}
+			<div class="container" id="page-{{ forloop.counter }}">{{ flatpage.content|markdown|safe }}</div>
+			{% endfor %}
+		</div>
+	</div>
+	{% else %}
+	<div class="col-12">
+		{{ flatpage.content|markdown|safe }}
+	</div>
+	{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+	$('document').ready(function () {
+		$('body').scrollspy({ target: '#flatpages-nav' });
+	});
+</script>
+{% endblock %}

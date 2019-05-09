@@ -29,7 +29,7 @@ class JobHelloWorldIntegrationTestCase(TestCase):
     def test_hello_completes(self):
         run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
+        self.assertEqual(self.job.status_enum, Job.Status.PENDING_OUTPUT_REVIEW)
 
     def test_hello_has_output(self):
         run_job_docker(self.job)
@@ -64,7 +64,7 @@ class JobGoodbyeWorldIntegrationTestCase(TestCase):
     def test_goodbye_completes(self):
         run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
+        self.assertEqual(self.job.status_enum, Job.Status.PENDING_OUTPUT_REVIEW)
 
     def test_goodbye_has_error(self):
         run_job_docker(self.job)
@@ -99,7 +99,7 @@ class JobAccessInternetIntegrationTestCase(TestCase):
     def test_access_internet_completes(self):
         run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
+        self.assertEqual(self.job.status_enum, Job.Status.PENDING_OUTPUT_REVIEW)
 
     def test_access_internet_has_error(self):
         run_job_docker(self.job)
@@ -136,7 +136,7 @@ class JobAccessResourceIntegrationTestCase(TestCase):
     def test_access_resource_completes(self):
         run_job_docker(self.job)
         self.job.refresh_from_db()
-        self.assertEqual(self.job.status_enum(), Job.Status.PENDING_OUTPUT_REVIEW)
+        self.assertEqual(self.job.status_enum, Job.Status.PENDING_OUTPUT_REVIEW)
 
     def test_access_resource_has_output(self):
         run_job_docker(self.job)
@@ -153,6 +153,45 @@ class JobAccessResourceIntegrationTestCase(TestCase):
         self.assertFalse(error)
 
     def test_access_resource_not_failed(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertFalse(self.job.failed)
+
+class JobEnvVarsIntegrationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.creator = User.objects.create_user('toejam', 'toejam@funkotron.net', 'toejam')
+        file = File(open('tests/env-vars.tar.gz', 'rb'))
+        self.job = Job.objects.create(
+            name='Env Vars Job',
+            description='Return env vars, including those inserted by the Portal',
+            status=Job.Status.QUEUED.name,
+            owner=self.creator,
+            filename=file.name,
+            file=file,
+            submitted_at=timezone.now(),
+        )
+
+    def test_env_var_completes(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status_enum, Job.Status.PENDING_OUTPUT_REVIEW)
+
+    def test_env_var_has_var(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        message = self.job.output.read().decode('utf-8')
+        # print(message)
+        self.assertTrue('EXAMPLE_VAR=abcd1234' in message)
+
+    def test_env_var_has_no_error(self):
+        run_job_docker(self.job)
+        self.job.refresh_from_db()
+        error = getattr(self.job, 'error', None)
+        print(error)
+        self.assertFalse(error)
+
+    def test_env_var_not_failed(self):
         run_job_docker(self.job)
         self.job.refresh_from_db()
         self.assertFalse(self.job.failed)

@@ -67,18 +67,17 @@
                 <h4>Submission File</h4>
                 <a href="{% url 'jobs:job_file' job.id %}">{{ job.filename }}</a>
             </div>
-            
-            {% if request.user.is_staff or job.status_enum is Job.Status.RELEASED %}
+            {% if request.user.is_staff or job.is_released %}
             {% if job.output.name %}
             <div class="col-sm">
                 <h4>Output File</h4>
-                <a href="{% url 'jobs:job_output' job.id %}">{{ job.output.name }}</a>
+                <a href="{% url 'jobs:job_output' job.id %}">{{ job.output_filename }}</a>
             </div>
             {% endif %}
             {% if job.errors.name %}
             <div class="col-sm">
                 <h4>Error File</h4>
-                <a href="{% url 'jobs:job_errors' job.id %}">{{ job.errors.name }}</a>
+                <a href="{% url 'jobs:job_errors' job.id %}">{{ job.errors_filename }}</a>
             </div>
             {% endif %}
             {% endif %}

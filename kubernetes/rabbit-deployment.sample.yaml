@@ -1,0 +1,45 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -v convert
+    kompose.version: 1.11.0 (39ad614)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: rabbit
+  name: rabbit
+spec:
+  replicas: $RABBIT_DEPLOYMENT_REPLICAS
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: rabbit
+    spec:
+      containers:
+      - env:
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: RUNNER_QUEUE_PASS
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: privascope-secrets
+              key: RUNNER_QUEUE_USER
+        image: $RABBIT_DEPLOYMENT_IMAGE
+        name: rabbit
+        ports:
+        - containerPort: 5672
+        resources: {}
+        volumeMounts:
+        - mountPath: $RABBIT_DEPLOYMENT_MOUNT_PATH
+          name: rabbit
+      restartPolicy: Always
+      volumes:
+      - name: rabbit
+        persistentVolumeClaim:
+          claimName: rabbit
+status: {}
