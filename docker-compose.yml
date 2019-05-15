@@ -48,7 +48,6 @@ services:
       - 'ADDITIONAL_INSTALLED_APPS=${ADDITIONAL_INSTALLED_APPS}'
       - 'INSTALLED_APPS_ENV_VARS=${INSTALLED_APPS_ENV_VARS}'
       - 'RESTRICTED_ACCESS_GROUPS=${RESTRICTED_ACCESS_GROUPS}'
-    command: python3.6 manage.py runserver 0.0.0.0:8000
     volumes:
       - ./portal:/usr/src/app
     ports:

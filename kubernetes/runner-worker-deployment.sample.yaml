@@ -210,7 +210,7 @@ spec:
         name: runner-worker
         resources: {}
         volumeMounts:
-        - mountPath: $RUNNER_WORKER_MOUNT_PATH
+        - mountPath: $RUNNER_WORKER_DEPLOYMENT_MOUNT_PATH
           name: job-files
       restartPolicy: Always
       volumes:

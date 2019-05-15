@@ -42,7 +42,7 @@ Do initial setup:
     docker-compose build
     docker-compose up --no-start
     docker-compose start
-    docker-compose run portal python3.6 manage.py migrate
+    docker-compose run portal python3.7 manage.py migrate
     docker-compose stop
 
 Start the development environment:
@@ -63,4 +63,4 @@ This should get the daemon running again.
 ### Integration tests
 
 1. Run the app with docker-compose as described above.
-2. `docker-compose run portal python3.6 manage.py test`
+2. `docker-compose run portal python3.7 manage.py test`

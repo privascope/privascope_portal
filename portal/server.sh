@@ -1,5 +1,5 @@
 #! /bin/bash
-set -e
+set -eu
 
-python3.6 ./manage.py collectstatic
+python${PYTHON_VERSION} ./manage.py collectstatic
 gunicorn -w 4 -b 0.0.0.0:8000 privascope_portal.wsgi

@@ -1,12 +1,14 @@
 FROM billyteves/ubuntu-dind:16.04
 # https://github.com/billyteves/ubuntu-dind
 
+ENV PYTHON_VERSION 3.7
+
 # Merge Python on top of Ubuntu-Docker:
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update
-RUN apt-get install -y build-essential python3.6
+RUN apt-get install -y build-essential python${PYTHON_VERSION}
 RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python3.6 get-pip.py
+RUN python${PYTHON_VERSION} get-pip.py
 
 # This app:
 
@@ -27,4 +29,4 @@ RUN pip3 install -r /tmp/requirements.txt
 
 COPY . /usr/src/app/
 
-CMD python3.6 manage.py runserver 0.0.0.0:8000
+CMD python${PYTHON_VERSION} manage.py runserver 0.0.0.0:8000

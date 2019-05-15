@@ -18,7 +18,7 @@ objects=(
 
 echo "Exporting variables from: $1"
 source $1
-mkdir ./output
+mkdir -p ./output
 
 for obj in ${objects[@]}; do
   echo "Substituting variables for $obj"
