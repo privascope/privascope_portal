@@ -1,4 +1,4 @@
-django==2.2
+django>=2.2.8
 dj-database-url==0.5.0
 django-forms-bootstrap==3.1.0
 djangosaml2==0.17.2
